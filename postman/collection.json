@@ -1,0 +1,324 @@
+{
+  "info": {
+    "name": "Career Evidence and Portfolio Coach API",
+    "_postman_id": "b7e1c0a2-4c4f-4d3e-9a2b-1f6d8e9c0b31",
+    "description": "Complete workspace for the Career Evidence and Portfolio Coach API. Sessions use HttpOnly cookies, so Postman's cookie jar handles auth automatically - run the Auth > Login request first. Mutating requests carry the CSRF header on purpose (the server rejects mutations without it); if a request fails with 403 CSRF, GET any endpoint once to receive a fresh coach_csrf cookie.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "studentEmail", "value": "priya.sharma@example.edu" },
+    { "key": "mentorEmail", "value": "rahul.mehta@example.org" },
+    { "key": "password", "value": "DemoPass123" },
+    { "key": "evidenceId", "value": "" },
+    { "key": "resumeId", "value": "" },
+    { "key": "targetId", "value": "" },
+    { "key": "planId", "value": "" },
+    { "key": "reviewId", "value": "" },
+    { "key": "grantId", "value": "" },
+    { "key": "invitationId", "value": "" },
+    { "key": "inviteToken", "value": "" },
+    { "key": "mentorId", "value": "" },
+    { "key": "portfolioSlug", "value": "" },
+    { "key": "resetToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Public",
+      "item": [
+        { "name": "Health", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] } } },
+        { "name": "Role guides (public)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/role-guides", "host": ["{{baseUrl}}"], "path": ["role-guides"] } } },
+        { "name": "Public portfolio by slug", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/portfolios/:slug", "host": ["{{baseUrl}}"], "path": ["portfolios", ":slug"] }, "description": "Only published projection fields are returned." } },
+        { "name": "File abuse report (public, anonymous allowed)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/abuse", "host": ["{{baseUrl}}"], "path": ["abuse"] },
+          "body": { "mode": "raw", "raw": "{\n  \"targetKind\": \"portfolio\",\n  \"targetId\": \"<24-char-id>\",\n  \"reason\": \"abusive\",\n  \"detail\": \"Describe the problem in at least 10 characters.\"\n}" }
+        } }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Register student", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+          "body": { "mode": "raw", "raw": "{\n  \"name\": \"Demo Student 2\",\n  \"email\": \"student2@example.edu\",\n  \"password\": \"DemoPass123\",\n  \"institution\": \"Example University\",\n  \"role\": \"student\"\n}" },
+          "description": "Context is generic by design (no account enumeration). Verification mail goes to the dev inbox in dev/test."
+        } },
+        { "name": "Verify email", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/auth/verify-email", "host": ["{{baseUrl}}"], "path": ["auth", "verify-email"] },
+          "body": { "mode": "raw", "raw": "{\n  \"token\": \"<token from GET /auth/dev-inbox actionUrl>\"\n}" }
+        } },
+        { "name": "Login (student)", "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('lastLogin', pm.response.text());"] } }], "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+          "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{password}}\"\n}" },
+          "description": "Stores the session cookie in Postman's jar. Run the other requests after this."
+        } },
+        { "name": "Login (mentor)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+          "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{mentorEmail}}\",\n  \"password\": \"{{password}}\"\n}" }
+        } },
+        { "name": "Register mentor (pending verification)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/auth/register/mentor", "host": ["{{baseUrl}}"], "path": ["auth", "register", "mentor"] },
+          "body": { "mode": "raw", "raw": "{\n  \"name\": \"New Mentor\",\n  \"email\": \"new.mentor@example.org\",\n  \"password\": \"DemoPass123\",\n  \"title\": \"Senior Engineer\"\n}" }
+        } },
+        { "name": "Me", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] } } },
+        { "name": "Dev inbox (dev/test only)", "request": {
+          "method": "GET",
+          "url": { "raw": "{{baseUrl}}/auth/dev-inbox", "host": ["{{baseUrl}}"], "path": ["auth", "dev-inbox"] },
+          "description": "Lists captured emails with actionUrl links (verification / reset tokens)."
+        } },
+        { "name": "Forgot password", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["auth", "forgot-password"] },
+          "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{studentEmail}}\"\n}" }
+        } },
+        { "name": "Reset password", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["auth", "reset-password"] },
+          "body": { "mode": "raw", "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"newPassword\": \"NewPass1234\"\n}" },
+          "description": "Single-use token; revokes all sessions of the user."
+        } },
+        { "name": "Change password", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/auth/change-password", "host": ["{{baseUrl}}"], "path": ["auth", "change-password"] },
+          "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"DemoPass123\",\n  \"newPassword\": \"NewPass1234\"\n}" }
+        } },
+        { "name": "Logout", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] } } }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "Update my profile", "request": {
+          "method": "PATCH",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] },
+          "body": { "mode": "raw", "raw": "{\n  \"name\": \"Priya Sharma\",\n  \"headline\": \"CS junior | backend\",\n  \"bio\": \"Building real projects.\",\n  \"institution\": \"Sunrise Institute of Technology\"\n}" }
+        } }
+      ]
+    },
+    {
+      "name": "Evidence",
+      "item": [
+        { "name": "List (filters: q,type,status,skill,sort,page,limit)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/evidence?q=&type=&status=&sort=newest&page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["evidence"], "query": [{ "key": "q", "value": "" }, { "key": "type", "value": "" }, { "key": "status", "value": "" }, { "key": "sort", "value": "newest" }, { "key": "page", "value": "1" }, { "key": "limit", "value": "20" }] } } },
+        { "name": "Facets", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/evidence/facets", "host": ["{{baseUrl}}"], "path": ["evidence", "facets"] } } },
+        { "name": "Create", "event": [{ "listen": "test", "script": { "exec": ["const b = pm.response.json(); // capture id", "pm.collectionVariables.set('evidenceId', b.evidence.id);"] } }], "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/evidence", "host": ["{{baseUrl}}"], "path": ["evidence"] },
+          "body": { "mode": "raw", "raw": "{\n  \"kind\": \"project\",\n  \"title\": \"Campus event booking platform\",\n  \"organization\": \"Example University\",\n  \"description\": \"React + Express booking app with seat maps and confirmation emails.\",\n  \"repoUrl\": \"https://github.com/example/event-booking\",\n  \"demoUrl\": \"\",\n  \"techSkills\": [\"React\", \"Express\", \"MongoDB\"],\n  \"startedAt\": \"2026-01-15\",\n  \"status\": \"unverified\",\n  \"statusNotes\": \"Repo public; mentor saw live demo.\"\n}" }
+        } },
+        { "name": "Get one", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/evidence/:id", "host": ["{{baseUrl}}"], "path": ["evidence", ":id"] }, "description": "Only your own evidence is readable." } },
+        { "name": "Update", "request": {
+          "method": "PATCH",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/evidence/:id", "host": ["{{baseUrl}}"], "path": ["evidence", ":id"] },
+          "body": { "mode": "raw", "raw": "{\n  \"status\": \"claimed\",\n  \"statusNotes\": \"Mentor reviewing this week.\"\n}" }
+        } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/evidence/:id", "host": ["{{baseUrl}}"], "path": ["evidence", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Resumes",
+      "item": [
+        { "name": "List (processing states + embed counts)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/resumes", "host": ["{{baseUrl}}"], "path": ["resumes"] } } },
+        { "name": "Upload (multipart field name: file)", "event": [{ "listen": "test", "script": { "exec": ["const b = pm.response.json();", "if (b.resume) pm.collectionVariables.set('resumeId', b.resume.id);"] } }], "request": {
+          "method": "POST",
+          "url": { "raw": "{{baseUrl}}/resumes", "host": ["{{baseUrl}}"], "path": ["resumes"] },
+          "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "path/to/resume.pdf" }] },
+          "description": "PDF, DOCX or TXT up to UPLOAD_MAX_SIZE_MB. Pipeline: uploaded - extracting - embedding - ready."
+        } },
+        { "name": "Get one (includes extracted text)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/resumes/:id", "host": ["{{baseUrl}}"], "path": ["resumes", ":id"] } } },
+        { "name": "Reprocess (replaces chunks, no duplicates)", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/resumes/:id/reprocess", "host": ["{{baseUrl}}"], "path": ["resumes", ":id", "reprocess"] } } },
+        { "name": "Delete (removes file + chunks immediately)", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/resumes/:id", "host": ["{{baseUrl}}"], "path": ["resumes", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Job targets",
+      "item": [
+        { "name": "List", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/job-targets", "host": ["{{baseUrl}}"], "path": ["job-targets"] } } },
+        { "name": "Create (paste a real posting)", "event": [{ "listen": "test", "script": { "exec": ["const b = pm.response.json();", "if (b.target) pm.collectionVariables.set('targetId', b.target.id);"] } }], "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/job-targets", "host": ["{{baseUrl}}"], "path": ["job-targets"] },
+          "body": { "mode": "raw", "raw": "{\n  \"title\": \"Backend Intern\",\n  \"organization\": \"Example Corp\",\n  \"city\": \"Bengaluru\",\n  \"jobDescription\": \"Paste the full job posting text here (min 10 chars). Looking for REST APIs with Node.js, MongoDB data modelling, testing basics and Git.\"\n}" }
+        } },
+        { "name": "Extract requirements (AI, 503 if Ollama offline)", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/job-targets/:id/extract", "host": ["{{baseUrl}}"], "path": ["job-targets", ":id", "extract"] } } },
+        { "name": "Confirm requirements (student-confirmed final list)", "request": {
+          "method": "PATCH",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/job-targets/:id/confirm", "host": ["{{baseUrl}}"], "path": ["job-targets", ":id", "confirm"] },
+          "body": { "mode": "raw", "raw": "{\n  \"consolidatedSkills\": [\"Node.js\", \"Express\", \"MongoDB\", \"Git\"],\n  \"requirements\": [\n    { \"statement\": \"Build REST APIs with Node.js and Express\", \"category\": \"framework\", \"weight\": 3, \"inferred\": true },\n    { \"statement\": \"Model data in MongoDB\", \"category\": \"database\", \"weight\": 2, \"inferred\": true }\n  ]\n}" }
+        } },
+        { "name": "Compare evidence vs requirements", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/job-targets/:id/compare", "host": ["{{baseUrl}}"], "path": ["job-targets", ":id", "compare"] }, "description": "Returns rows labelled supported/partial/missing/unverified plus coverage meta. Coverage counts documented evidence only." } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/job-targets/:id", "host": ["{{baseUrl}}"], "path": ["job-targets", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Career chat",
+      "item": [
+        { "name": "Ask (grounded RAG)", "event": [{ "listen": "test", "script": { "exec": ["const b = pm.response.json();", "if (b.conversationId) pm.collectionVariables.set('conversationId', b.conversationId);"] } }], "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/career-chat", "host": ["{{baseUrl}}"], "path": ["career-chat"] },
+          "body": { "mode": "raw", "raw": "{\n  \"question\": \"What backend projects of mine demonstrate Express?\",\n  \"topK\": 6\n}" },
+          "description": "503 MODEL_UNAVAILABLE when Ollama is offline; keyword fallback labelled when vector search is unavailable."
+        } },
+        { "name": "List conversations", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/career-chat/conversations", "host": ["{{baseUrl}}"], "path": ["career-chat", "conversations"] } } },
+        { "name": "Get conversation", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/career-chat/conversations/:id", "host": ["{{baseUrl}}"], "path": ["career-chat", "conversations", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Preparation agent",
+      "item": [
+        { "name": "Run (bounded, produces DRAFT plan)", "event": [{ "listen": "test", "script": { "exec": ["const b = pm.response.json();", "const pid = b.draftPlanId ? b.draftPlanId : ''; // capture run + draft plan", "if (b.runId) pm.collectionVariables.set('agentRunId', b.runId);"] } }], "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/preparation-agent", "host": ["{{baseUrl}}"], "path": ["preparation-agent"] },
+          "body": { "mode": "raw", "raw": "{\n  \"jobTargetId\": \"{{targetId}}\",\n  \"hoursPerWeek\": 8,\n  \"weeks\": 4\n}" },
+          "description": "Tools: readRequirements -> findEvidence -> schedulePractice. Every call Zod-validated + telemetered."
+        } },
+        { "name": "Run telemetry", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/preparation-agent/runs/:id", "host": ["{{baseUrl}}"], "path": ["preparation-agent", "runs", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Plans",
+      "item": [
+        { "name": "List (status filter: draft|confirmed)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/plans?status=draft", "host": ["{{baseUrl}}"], "path": ["plans"], "query": [{ "key": "status", "value": "draft" }] } } },
+        { "name": "Get one", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/plans/:id", "host": ["{{baseUrl}}"], "path": ["plans", ":id"] } } },
+        { "name": "Edit draft plan", "request": {
+          "method": "PATCH",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/plans/:id", "host": ["{{baseUrl}}"], "path": ["plans", ":id"] },
+          "body": { "mode": "raw", "raw": "{\n  \"input\": { \"hoursPerWeek\": 10, \"durationWeeks\": 5 }\n}" }
+        } },
+        { "name": "Confirm (explicit save; idempotent, 409 on replay after confirm)", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/plans/:id/confirm", "host": ["{{baseUrl}}"], "path": ["plans", ":id", "confirm"] } } },
+        { "name": "Complete an item", "request": {
+          "method": "PATCH",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/plans/:id/items/complete", "host": ["{{baseUrl}}"], "path": ["plans", ":id", "items", "complete"] },
+          "body": { "mode": "raw", "raw": "{\n  \"itemIndex\": 0,\n  \"completed\": true\n}" }
+        } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/plans/:id", "host": ["{{baseUrl}}"], "path": ["plans", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Mentoring",
+      "item": [
+        { "name": "Invite a mentor (student)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/mentor-invitations", "host": ["{{baseUrl}}"], "path": ["mentor-invitations"] },
+          "body": { "mode": "raw", "raw": "{\n  \"mentorEmail\": \"{{mentorEmail}}\",\n  \"note\": \"Please review my Node.js projects.\"\n}" }
+        } },
+        { "name": "My invitations (student)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/mentor-invitations", "host": ["{{baseUrl}}"], "path": ["mentor-invitations"] } } },
+        { "name": "Revoke invitation (student)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/mentor-invitations/:id/revoke", "host": ["{{baseUrl}}"], "path": ["mentor-invitations", ":id", "revoke"] },
+          "body": { "mode": "raw", "raw": "{}" }
+        } },
+        { "name": "Pending invitations (mentor)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/mentor-invitations/pending", "host": ["{{baseUrl}}"], "path": ["mentor-invitations", "pending"] } } },
+        { "name": "Accept invitation with token (mentor)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/mentor-invitations/accept", "host": ["{{baseUrl}}"], "path": ["mentor-invitations", "accept"] },
+          "body": { "mode": "raw", "raw": "{\n  \"token\": \"<token from the invitation email / dev inbox>\"\n}" }
+        } },
+        { "name": "Grants (role-aware list)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/grants", "host": ["{{baseUrl}}"], "path": ["grants"] } } },
+        { "name": "Create/replace grant scope (student)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/grants", "host": ["{{baseUrl}}"], "path": ["grants"] },
+          "body": { "mode": "raw", "raw": "{\n  \"mentorId\": \"<24-char mentor user id>\",\n  \"evidenceIds\": [],\n  \"resumeIds\": [],\n  \"note\": \"Workspace access\"\n}" },
+          "description": "Replace-upsert per student and mentor pair. Every shared id is ownership-checked."
+        } },
+        { "name": "Revoke grant (student)", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/grants/:id", "host": ["{{baseUrl}}"], "path": ["grants", ":id"] } } },
+        { "name": "Everything currently shared with me (mentor)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/shared", "host": ["{{baseUrl}}"], "path": ["shared"] } } },
+        { "name": "Read a shared resume's extracted text (mentor)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/shared/resumes/:id", "host": ["{{baseUrl}}"], "path": ["shared", "resumes", ":id"] } } },
+        { "name": "Open a review (mentor)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/reviews", "host": ["{{baseUrl}}"], "path": ["reviews"] },
+          "body": { "mode": "raw", "raw": "{\n  \"studentId\": \"<24-char student id>\",\n  \"grantId\": \"{{grantId}}\",\n  \"title\": \"Feedback round on backend projects\",\n  \"evidenceIds\": []\n}" }
+        } },
+        { "name": "My reviews (role-aware)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/reviews", "host": ["{{baseUrl}}"], "path": ["reviews"] } } },
+        { "name": "Get review with thread", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/reviews/:id", "host": ["{{baseUrl}}"], "path": ["reviews", ":id"] } } },
+        { "name": "Comment (student or mentor)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/reviews/:id/comments", "host": ["{{baseUrl}}"], "path": ["reviews", ":id", "comments"] },
+          "body": { "mode": "raw", "raw": "{\n  \"body\": \"Nice separation of concerns in the routes layer.\",\n  \"evidenceId\": \"\"\n}" }
+        } },
+        { "name": "Practice suggestion (mentor)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/reviews/:id/suggestions", "host": ["{{baseUrl}}"], "path": ["reviews", ":id", "suggestions"] },
+          "body": { "mode": "raw", "raw": "{\n  \"text\": \"Add Vitest coverage for the auth middleware paths.\"\n}" }
+        } },
+        { "name": "Complete review (mentor)", "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/reviews/:id/complete", "host": ["{{baseUrl}}"], "path": ["reviews", ":id", "complete"] } } },
+        { "name": "Mentor plan feedback", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/plans/:planId/feedback", "host": ["{{baseUrl}}"], "path": ["plans", ":planId", "feedback"] },
+          "body": { "mode": "raw", "raw": "{\n  \"studentId\": \"<24-char student id>\",\n  \"text\": \"Front-load the testing tasks in week 1.\"\n}" }
+        } }
+      ]
+    },
+    {
+      "name": "Portfolio",
+      "item": [
+        { "name": "My portfolio (auto-creates default)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/portfolio", "host": ["{{baseUrl}}"], "path": ["portfolio"] } } },
+        { "name": "Update fields / publish / unpublish", "request": {
+          "method": "PATCH",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/portfolio/visibility", "host": ["{{baseUrl}}"], "path": ["portfolio", "visibility"] },
+          "body": { "mode": "raw", "raw": "{\n  \"action\": \"publish\",\n  \"changes\": {\n    \"publicName\": \"Priya Sharma\",\n    \"headline\": \"CS junior | backend\",\n    \"intro\": \"Evidence-first portfolio.\",\n    \"emailPublic\": \"\",\n    \"githubUrl\": \"\",\n    \"linkedinUrl\": \"\",\n    \"school\": \"Sunrise Institute of Technology\",\n    \"coursework\": [\"DBMS\"],\n    \"expertise\": [\"Node.js\"],\n    \"evidenceIds\": []\n  }\n}" },
+          "description": "action: publish | unpublish. Returns publicUrl when published."
+        } },
+        { "name": "Preview (what would be public)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/portfolio/preview", "host": ["{{baseUrl}}"], "path": ["portfolio", "preview"] } } }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        { "name": "Pending mentors", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/admin/mentors/pending", "host": ["{{baseUrl}}"], "path": ["admin", "mentors", "pending"] } } },
+        { "name": "Verify / un-verify mentor", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/admin/mentors/verify", "host": ["{{baseUrl}}"], "path": ["admin", "mentors", "verify"] },
+          "body": { "mode": "raw", "raw": "{\n  \"mentorId\": \"<user id>\",\n  \"verified\": true\n}" }
+        } },
+        { "name": "All abuse reports", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/admin/abuse", "host": ["{{baseUrl}}"], "path": ["admin", "abuse"] } } },
+        { "name": "Process abuse report", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/admin/abuse/process", "host": ["{{baseUrl}}"], "path": ["admin", "abuse", "process"] },
+          "body": { "mode": "raw", "raw": "{\n  \"reportId\": \"<report id>\",\n  \"status\": \"resolved\",\n  \"resolutionNote\": \"Contacted reporter; content adjusted.\"\n}" }
+        } },
+        { "name": "Moderate content (disable/enable)", "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": { "raw": "{{baseUrl}}/admin/moderation", "host": ["{{baseUrl}}"], "path": ["admin", "moderation"] },
+          "body": { "mode": "raw", "raw": "{\n  \"contentType\": \"portfolio\",\n  \"contentId\": \"<portfolio id>\",\n  \"action\": \"disable\",\n  \"reason\": \"Reported as plagiarised.\"\n}" }
+        } },
+        { "name": "Service health", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/admin/service-health", "host": ["{{baseUrl}}"], "path": ["admin", "service-health"] } } },
+        { "name": "Audit trail (50/page)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/admin/audit?page=1", "host": ["{{baseUrl}}"], "path": ["admin", "audit"], "query": [{ "key": "page", "value": "1" }] } } }
+      ]
+    }
+  ]
+}

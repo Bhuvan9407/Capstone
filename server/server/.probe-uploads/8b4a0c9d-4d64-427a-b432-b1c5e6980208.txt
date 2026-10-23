@@ -1,3 +1,0 @@
-Alpha text chunk one.
-
-Alpha text chunk two, bigger content to maybe split.

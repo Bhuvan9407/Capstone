@@ -10,5 +10,8 @@ logs/
 coverage/
 .playwright/
 test-results/
+last-run.txt
+.probe-uploads/
+server/server/
 .DS_Store
 *.log
