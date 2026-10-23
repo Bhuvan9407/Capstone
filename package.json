@@ -1,0 +1,17 @@
+{
+  "name": "career-evidence-portfolio-coach",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Career Evidence and Portfolio Coach - full-stack capstone application",
+  "type": "module",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "seed": "npm --prefix server run seed",
+    "create-admin": "npm --prefix server run create-admin",
+    "vector-index": "npm --prefix server run vector-index",
+    "test": "npm --prefix server run test",
+    "test:e2e": "npm --prefix client run test:e2e"
+  }
+}
